@@ -11,7 +11,7 @@ async function main() {
   // Configuration - Update these for production
   const config = {
     // For testnet, we deploy a mock USDC. For mainnet, use the actual USDC address
-    useRealUSDC: false,
+    useRealUSDC: true,
     usdcAddress: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", // Polygon USDC
     // Polymarket CTF address (Polygon mainnet)
     ctfAddress: "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045",

@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "dotenv/config";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -26,10 +27,10 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: {
-      polygon: process.env.POLYGONSCAN_API_KEY || "",
-      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "",
-    },
+    apiKey: process.env.POLYGONSCAN_API_KEY || "",
+  },
+  sourcify: {
+    enabled: false,
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

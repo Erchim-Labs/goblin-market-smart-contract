@@ -1,0 +1,1209 @@
+app:
+  description: Zary KB Chatflow V2 - Adaptive Intelligence with Question Type Routing
+  icon: 🤖
+  icon_background: '#1E3A5F'
+  mode: advanced-chat
+  name: Pulse KB Chatflow V2
+  use_icon_as_answer_icon: true
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/cohere:0.0.8@1456818eb78f25c1a25e91809cecbd78e5523d39868dcb78607e625913b5e4fe
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: '# Pulse KB - Zary Knowledge Assistant 📚
+
+
+      Сайн байна у|! Би **Pulse KB**, Zary-н бизнес мэдлэгийн туслах.
+
+
+      ## 🔍 Юу асууж болох вэ?
+
+
+      | Асуултын төрөл | Жишээ |
+
+      |----------------|-------|
+
+      | 📊 **Тоон мэдээлэл** | "Q4 2024 нийт борлуулалт хэд?" |
+
+      | 📈 **Харьцуулалт** | "Q3 vs Q4 2024 харьцуулалт" |
+
+      | 📋 **Хураангуй** | "2024 оны гол амжилтууд юу байсан?" |
+
+      | ❓ **Баримт** | "StorePay гэж юу вэ?" |
+
+
+      ## 📂 KB-д байгаа мэдээлэл:
+
+      - Улирлын тайлан (2021-2025)
+
+      - Бизнес төлөвлөгөө
+
+      - Маркетинг, борлуулалт, хэрэглэгч статистик
+
+
+      *Монгол эсвэл англиар асуугаарай* 🇲🇳🇺🇸
+
+      '
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 2024 оны нийт борлуулалт хэд байсан?
+    - What were Zary's top achievements in 2025?
+    - Q3 vs Q4 2024 StorePay харьцуулалт
+    - How many new merchants joined in Q1 2025?
+    - 2025 оны стратегийн зорилтууд юу вэ?
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start-to-classifier
+      selected: false
+      source: node_start
+      sourceHandle: source
+      target: node_classifier
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: classifier-to-kb
+      selected: false
+      source: node_classifier
+      sourceHandle: source
+      target: node_kb_retrieval
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: if-else
+      id: kb-to-result-check
+      selected: false
+      source: node_kb_retrieval
+      sourceHandle: source
+      target: node_result_check
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: if-else
+      id: result-check-to-router
+      selected: false
+      source: node_result_check
+      sourceHandle: 'true'
+      target: node_type_router
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: result-check-to-fallback
+      selected: false
+      source: node_result_check
+      sourceHandle: 'false'
+      target: node_fallback
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-numerical
+      selected: false
+      source: node_type_router
+      sourceHandle: numerical
+      target: node_numerical_handler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-comparison
+      selected: false
+      source: node_type_router
+      sourceHandle: comparison
+      target: node_comparison_handler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-summary
+      selected: false
+      source: node_type_router
+      sourceHandle: summary
+      target: node_summary_handler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-factual
+      selected: false
+      source: node_type_router
+      sourceHandle: 'false'
+      target: node_factual_handler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: numerical-to-answer
+      selected: false
+      source: node_numerical_handler
+      sourceHandle: source
+      target: node_answer_main
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: comparison-to-answer
+      selected: false
+      source: node_comparison_handler
+      sourceHandle: source
+      target: node_answer_main
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: summary-to-answer
+      selected: false
+      source: node_summary_handler
+      sourceHandle: source
+      target: node_answer_main
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: factual-to-answer
+      selected: false
+      source: node_factual_handler
+      sourceHandle: source
+      target: node_answer_main
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: fallback-to-answer
+      selected: false
+      source: node_fallback
+      sourceHandle: source
+      target: node_answer_fallback
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: Start
+        type: start
+        variables:
+        - default: Zary
+          label: Client Name
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: client_name
+      height: 109
+      id: node_start
+      position:
+        x: 0
+        y: 300
+      positionAbsolute:
+        x: 0
+        y: 300
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 15
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: classifier-system-001
+          role: system
+          text: 'You are a Query Classifier for {{#node_start.client_name#}}''s Knowledge
+            Base.
+
+
+            User query: "{{#sys.query#}}"
+
+
+            ## ANALYZE THE QUERY
+
+
+            ### 1. QUESTION TYPE CLASSIFICATION
+
+
+            **NUMERICAL** (55% of queries)
+
+            - "What was total sales?" / "Нийт борлуулалт хэд?"
+
+            - "How many merchants?" / "Хэдэн мерчант?"
+
+            - Looking for specific numbers, counts, percentages
+
+            - Keywords: хэд, how many, total, count, %, rate
+
+
+            **COMPARISON** (12% of queries)
+
+            - "Q1 vs Q2" / "2024 vs 2025"
+
+            - "Compare..." / "Харьцуулалт"
+
+            - Contains temporal comparison (vs, versus, compared to, харьцуулах)
+
+            - Keywords: vs, versus, compare, харьцуулах, өмнөх, previous
+
+
+            **SUMMARY** (20% of queries)
+
+            - "What are the main achievements?" / "Гол амжилтууд юу вэ?"
+
+            - "Summarize Q4 performance" / "Үйл явцыг товчлох"
+
+            - Needs aggregated, narrative response
+
+            - Keywords: summarize, main, key, гол, товчлох, achievements
+
+
+            **FACTUAL** (13% of queries)
+
+            - "What is StorePay?" / "StorePay гэж юу вэ?"
+
+            - "Who are the top merchants?"
+
+            - Looking for specific facts, names, definitions
+
+            - Keywords: what is, who, гэж юу, definition
+
+
+            ### 2. LANGUAGE DETECTION
+
+            - MN: Mongolian (Cyrillic characters present)
+
+            - EN: English only
+
+            - MIXED: Both languages in query
+
+
+            ### 3. TEMPORAL PARSING
+
+            Extract time references:
+
+            - specific_periods: ["Q1 2024", "Q4 2025"] or empty array
+
+            - is_cross_period: true if comparing different periods
+
+
+            ### 4. SEARCH QUERY OPTIMIZATION
+
+            - Add bilingual synonyms (борлуулалт = sales = revenue)
+
+            - Include year/quarter from temporal parsing
+
+            - Remove filler words, keep business terms
+
+            - Keep 10-15 words max
+
+
+            Return structured JSON.
+
+            '
+        - id: classifier-user-001
+          role: user
+          text: Classify this query and optimize for KB search.
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              is_cross_period:
+                description: Whether comparing different time periods
+                type: boolean
+              language:
+                description: Detected language
+                enum:
+                - MN
+                - EN
+                - MIXED
+                type: string
+              original_intent:
+                description: Brief description of what user is asking
+                type: string
+              question_type:
+                description: Type of question being asked
+                enum:
+                - NUMERICAL
+                - COMPARISON
+                - SUMMARY
+                - FACTUAL
+                type: string
+              search_query:
+                description: Optimized search query for vector DB
+                type: string
+              specific_periods:
+                description: Time periods mentioned (e.g., Q1 2024, 2025)
+                items:
+                  type: string
+                type: array
+            required:
+            - question_type
+            - language
+            - search_query
+            - original_intent
+            - is_cross_period
+            type: object
+        structured_output_enabled: true
+        title: Smart Classifier
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_classifier
+      position:
+        x: 342
+        y: 300
+      positionAbsolute:
+        x: 342
+        y: 300
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - oTBkadAKMV7R5JhxBjLz8b+/qVQ52t3AlNANU2Tgvenf70V3HVO2cx5tTwMv5UKG
+        metadata_filtering_mode: automatic
+        metadata_model_config:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.15
+          top_k: 15
+          weights:
+            keyword_setting:
+              keyword_weight: 0.4
+            vector_setting:
+              embedding_model_name: text-multilingual-embedding-002
+              embedding_provider_name: langgenius/vertex_ai/vertex_ai
+              vector_weight: 0.6
+            weight_type: customized
+        query_attachment_selector: []
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: KB Retrieval
+        type: knowledge-retrieval
+      height: 90
+      id: node_kb_retrieval
+      position:
+        x: 684
+        y: 300
+      positionAbsolute:
+        x: 684
+        y: 300
+      selected: true
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: not empty
+            id: result_check_cond
+            varType: array[object]
+            variable_selector:
+            - node_kb_retrieval
+            - result
+          id: 'true'
+          logical_operator: and
+        selected: false
+        title: Has Results?
+        type: if-else
+      height: 124
+      id: node_result_check
+      position:
+        x: 1026
+        y: 280
+      positionAbsolute:
+        x: 1026
+        y: 280
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: numerical
+          conditions:
+          - comparison_operator: is
+            id: numerical_cond
+            value: NUMERICAL
+            varType: string
+            variable_selector:
+            - node_classifier
+            - structured_output
+            - question_type
+          id: numerical
+          logical_operator: and
+        - case_id: comparison
+          conditions:
+          - comparison_operator: is
+            id: comparison_cond
+            value: COMPARISON
+            varType: string
+            variable_selector:
+            - node_classifier
+            - structured_output
+            - question_type
+          id: comparison
+          logical_operator: and
+        - case_id: summary
+          conditions:
+          - comparison_operator: is
+            id: summary_cond
+            value: SUMMARY
+            varType: string
+            variable_selector:
+            - node_classifier
+            - structured_output
+            - question_type
+          id: summary
+          logical_operator: and
+        selected: false
+        title: Question Type Router
+        type: if-else
+      height: 220
+      id: node_type_router
+      position:
+        x: 1368
+        y: 200
+      positionAbsolute:
+        x: 1368
+        y: 200
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - node_kb_retrieval
+          - result
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: numerical-system-001
+          role: system
+          text: 'You are **Pulse KB**, answering NUMERICAL questions for {{#node_start.client_name#}}.
+
+
+            Language: {{#node_classifier.structured_output.language#}}
+
+            - MN = Reply in Mongolian
+
+            - EN = Reply in English
+
+            - MIXED = Reply in the dominant language of the question
+
+
+            Question: "{{#sys.query#}}"
+
+            Intent: {{#node_classifier.structured_output.original_intent#}}
+
+            Time Period: {{#node_classifier.structured_output.specific_periods#}}
+
+
+            ## KNOWLEDGE BASE CONTEXT
+
+            {{#context#}}
+
+
+            ## RESPONSE FORMAT (Numerical Questions)
+
+
+            **📊 [Metric Name]**
+
+
+            # [EXACT NUMBER] [with unit: ₮, %, count]
+
+
+            | Period | Value | Change |
+
+            |--------|-------|--------|
+
+            | [Period] | [Value] | [±X%] |
+
+
+            💡 **Context:** [Brief context if relevant - 1 sentence max]
+
+
+            ---
+
+            📚 **Source:** {{#node_start.client_name#}} KB
+
+            📅 **Period:** [extracted from query or KB]
+
+
+            💬 **Follow-up:**
+
+            • [Related numerical question]
+
+            • [Related comparison question]
+
+
+            ## RULES
+
+            1. Lead with the EXACT number - no approximations unless KB only has estimates
+
+            2. Include unit (₮, %, count, etc.)
+
+            3. Format currency as: ₮1.2B, ₮500M, ₮50K
+
+            4. Format percentages as: 52.19%, not 0.5219
+
+            5. Add comparison vs previous period if available in KB
+
+            6. If number not found, say "Энэ тоо KB-д олдсонгүй" (MN) / "This number
+            was not found in KB" (EN)
+
+            7. Keep response concise - max 150 words
+
+            '
+        - id: numerical-user-001
+          role: user
+          text: Extract and present the numerical data.
+        selected: false
+        title: Numerical Handler
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_numerical_handler
+      position:
+        x: 1710
+        y: 50
+      positionAbsolute:
+        x: 1710
+        y: 50
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - node_kb_retrieval
+          - result
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: comparison-system-001
+          role: system
+          text: 'You are **Pulse KB**, answering COMPARISON questions for {{#node_start.client_name#}}.
+
+
+            Language: {{#node_classifier.structured_output.language#}}
+
+            Question: "{{#sys.query#}}"
+
+            Periods Being Compared: {{#node_classifier.structured_output.specific_periods#}}
+
+
+            ## KNOWLEDGE BASE CONTEXT
+
+            {{#context#}}
+
+
+            ## RESPONSE FORMAT (Comparison Questions)
+
+
+            **📊 [Metric] Comparison: [Period A] vs [Period B]**
+
+
+            | Metric | [Period A] | [Period B] | Change |
+
+            |--------|------------|------------|--------|
+
+            | Total Sales | 3.2B₮ | 3.0B₮ | ↓ -6.25% |
+
+            | Users | 87,616 | 92,462 | ↑ +5.5% |
+
+            | StorePay | 2.4B₮ | 1.5B₮ | ↓ -37.5% |
+
+
+            **📈 Key Findings:**
+
+            • [Most significant positive change with ↑]
+
+            • [Most significant negative change with ↓]
+
+            • [Overall trend direction]
+
+
+            **💡 Context:**
+
+            [Why the change happened - if mentioned in KB, 1-2 sentences]
+
+
+            ---
+
+            📚 **Source:** {{#node_start.client_name#}} KB
+
+            📅 **Compared:** [Period A] vs [Period B]
+
+
+            💬 **Dig Deeper:**
+
+            • [More specific numerical question]
+
+            • [Related summary question]
+
+
+            ## RULES
+
+            1. ALWAYS use comparison table format with both periods as columns
+
+            2. Calculate change % when both values available: ((new-old)/old)*100
+
+            3. Use ↑ for positive, ↓ for negative changes
+
+            4. Highlight the biggest changes in Key Findings
+
+            5. If data for one period missing, explicitly note "Data not available
+            for [period]"
+
+            6. Include at least 3 metrics in comparison table if available
+
+            7. Keep response under 200 words
+
+            '
+        - id: comparison-user-001
+          role: user
+          text: Compare the data across time periods.
+        selected: false
+        title: Comparison Handler
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_comparison_handler
+      position:
+        x: 1710
+        y: 180
+      positionAbsolute:
+        x: 1710
+        y: 180
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - node_kb_retrieval
+          - result
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 15
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: summary-system-001
+          role: system
+          text: 'You are **Pulse KB**, answering SUMMARY questions for {{#node_start.client_name#}}.
+
+
+            Language: {{#node_classifier.structured_output.language#}}
+
+            - MN = Reply in Mongolian
+
+            - EN = Reply in English
+
+
+            Question: "{{#sys.query#}}"
+
+            Intent: {{#node_classifier.structured_output.original_intent#}}
+
+            Time Period: {{#node_classifier.structured_output.specific_periods#}}
+
+
+            ## KNOWLEDGE BASE CONTEXT (Multiple Sections)
+
+            {{#context#}}
+
+
+            ## RESPONSE FORMAT (Summary Questions)
+
+
+            **📋 [Summary Topic]**
+
+
+            [2-3 sentence executive summary directly answering the question]
+
+
+            **Key Points:**
+
+
+            **1. [First Main Point]**
+
+            • [Supporting detail with specific fact/number from KB]
+
+            • [Evidence: metric or quote]
+
+
+            **2. [Second Main Point]**
+
+            • [Supporting detail with specific fact/number from KB]
+
+            • [Evidence: metric or quote]
+
+
+            **3. [Third Main Point]**
+
+            • [Supporting detail with specific fact/number from KB]
+
+            • [Evidence: metric or quote]
+
+
+            **Strategic Context:**
+
+            [How this connects to broader goals/challenges - if mentioned in KB]
+
+
+            ---
+
+            📚 **Source:** {{#node_start.client_name#}} KB ({{#node_classifier.structured_output.specific_periods#}})
+
+
+            💬 **Go Deeper:**
+
+            • [Related numerical question to explore a point]
+
+            • [Related comparison question]
+
+
+            ## CRITICAL RULES FOR SUMMARIES
+
+            1. SYNTHESIZE information across ALL retrieved chunks - do NOT just quote
+            one section
+
+            2. Include BOTH qualitative points AND supporting numbers/metrics
+
+            3. Structure with exactly 3 key points
+
+            4. Each key point MUST have evidence from KB (number, date, or direct
+            fact)
+
+            5. If KB context is limited, acknowledge: "KB хязгаарлагдмал мэдээлэлтэй"
+            / "Limited information available in KB"
+
+            6. Aim for 150-250 words in response
+
+            7. Use bullet points for clarity and scannability
+
+            8. Match the user''s language throughout
+
+            '
+        - id: summary-user-001
+          role: user
+          text: Summarize the information from the knowledge base.
+        selected: false
+        title: Summary Handler
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_summary_handler
+      position:
+        x: 1710
+        y: 310
+      positionAbsolute:
+        x: 1710
+        y: 310
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - node_kb_retrieval
+          - result
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: factual-system-001
+          role: system
+          text: 'You are **Pulse KB**, answering FACTUAL questions for {{#node_start.client_name#}}.
+
+
+            Language: {{#node_classifier.structured_output.language#}}
+
+            Question: "{{#sys.query#}}"
+
+            Intent: {{#node_classifier.structured_output.original_intent#}}
+
+
+            ## KNOWLEDGE BASE CONTEXT
+
+            {{#context#}}
+
+
+            ## RESPONSE FORMAT (Factual Questions)
+
+
+            **[Direct answer in 1-2 sentences]**
+
+
+            **Details:**
+
+            • [Key attribute/characteristic]
+
+            • [Related information]
+
+            • [Numbers if applicable]
+
+
+            **Context:**
+
+            [Brief explanation of why this matters or how it''s used - 1-2 sentences]
+
+
+            ---
+
+            📚 **Source:** {{#node_start.client_name#}} KB
+
+
+            💬 **Related:**
+
+            • [Related numerical question]
+
+            • [Related factual question]
+
+
+            ## RULES
+
+            1. Answer the specific fact asked FIRST - be direct
+
+            2. Keep response focused and concise (under 120 words)
+
+            3. Include related context only if directly relevant
+
+            4. If definition requested, provide clear explanation in user''s language
+
+            5. If fact not found, say "Энэ мэдээлэл KB-д олдсонгүй" (MN) / "This information
+            was not found in KB" (EN)
+
+            6. For "who/what is" questions, start with the definition/identity
+
+            '
+        - id: factual-user-001
+          role: user
+          text: Provide the factual information requested.
+        selected: false
+        title: Factual Handler
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_factual_handler
+      position:
+        x: 1710
+        y: 441.4321164004218
+      positionAbsolute:
+        x: 1710
+        y: 441.4321164004218
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: anthropic/claude-haiku-4.5
+          provider: pulse/openrouter/openrouter
+        prompt_template:
+        - id: fallback-system-001
+          role: system
+          text: 'You are Pulse KB assistant for {{#node_start.client_name#}}.
+
+
+            Language: {{#node_classifier.structured_output.language#}}
+
+            Question Type: {{#node_classifier.structured_output.question_type#}}
+
+            User asked: "{{#sys.query#}}"
+
+
+            The Knowledge Base did not return relevant results for this query.
+
+
+            ## RESPONSE (max 10 lines)
+
+
+            **If MN:**
+
+            Уучлаарай, энэ асуултад хариулах мэдээлэл KB-д олдсонгүй.
+
+
+            **KB-д байгаа мэдээлэл:**
+
+            📊 Улирлын тайлан: Q1-Q4 (2021-2025)
+
+            📋 Бизнес төлөвлөгөө: 2023, 2025
+
+            📈 Гол metrics: Sales, Users, Merchants, StorePay, NPL, AOV
+
+
+            **Туслах асуултууд:**
+
+            • "2024 оны нийт борлуулалт хэд байсан?"
+
+            • "Q4 2024 ба Q3 2024 харьцуулалт"
+
+            • "2025 оны гол амжилтууд юу вэ?"
+
+
+            ---
+
+
+            **If EN:**
+
+            Sorry, I couldn''t find relevant information for this question in the
+            Knowledge Base.
+
+
+            **KB Contains:**
+
+            📊 Quarterly reports: Q1-Q4 (2021-2025)
+
+            📋 Business plans: 2023, 2025
+
+            📈 Key metrics: Sales, Users, Merchants, StorePay, NPL, AOV
+
+
+            **Try these questions:**
+
+            • "Total sales in 2024?"
+
+            • "Compare Q4 vs Q3 2024"
+
+            • "What were the main achievements in 2025?"
+
+            '
+        - id: fallback-user-001
+          role: user
+          text: Provide a helpful fallback response.
+        selected: false
+        title: Fallback Response
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: node_fallback
+      position:
+        x: 1368
+        y: 500
+      positionAbsolute:
+        x: 1368
+        y: 500
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#node_numerical_handler.text#}}{{#node_comparison_handler.text#}}{{#node_summary_handler.text#}}{{#node_factual_handler.text#}}'
+        selected: false
+        title: Main Answer
+        type: answer
+        variables: []
+      height: 158
+      id: node_answer_main
+      position:
+        x: 2052
+        y: 250
+      positionAbsolute:
+        x: 2052
+        y: 250
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#node_fallback.text#}}'
+        selected: false
+        title: Fallback Answer
+        type: answer
+        variables: []
+      height: 103
+      id: node_answer_fallback
+      position:
+        x: 1710
+        y: 613.4628129390559
+      positionAbsolute:
+        x: 1710
+        y: 613.4628129390559
+      selected: false
+      type: custom
+      width: 242
+    viewport:
+      x: -1124.888768803309
+      y: -182.3615932991575
+      zoom: 0.8584864930657066
+  rag_pipeline_variables: []
