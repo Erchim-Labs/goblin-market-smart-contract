@@ -19,6 +19,7 @@ This guide provides everything a backend engineer needs to integrate with the Go
 9. [Transaction Patterns](#9-transaction-patterns)
 10. [Code Examples](#10-code-examples)
 11. [Security Considerations](#11-security-considerations)
+12. [FAQ - Common Questions](#12-faq---common-questions)
 
 ---
 
@@ -1233,6 +1234,148 @@ class CircuitBreaker {
 - [ ] Alert on contract pause events
 - [ ] Track position P&L and exposure
 - [ ] Monitor leader trading patterns for anomalies
+
+---
+
+## 12. FAQ - Common Questions
+
+This section answers frequently asked questions about the smart contract architecture and integration.
+
+### 12.1 Why is the leader list stored on-chain? Who updates it?
+
+**Why on-chain?** The leader list is stored on-chain (`approvedLeaders` mapping + `leaderList` array in `CopyVault.sol`) for security and transparency:
+
+- Anyone can verify which leaders are approved
+- Prevents unauthorized trade execution (backend checks `isApprovedLeader()` before mirroring)
+- Audit trail of leader changes via `LeaderAdded`/`LeaderRemoved` events
+
+**Who updates it?** Only addresses with `STRATEGIST_ROLE` can call `addLeader()` or `removeLeader()`. This is typically a multisig or admin wallet, NOT the backend service.
+
+**Spam protection:** Users cannot spam the leader list because:
+
+1. Only `STRATEGIST_ROLE` can modify leaders (not users)
+2. The backend service has `EXECUTOR_ROLE` (for trades), NOT `STRATEGIST_ROLE`
+3. Role separation is intentional - strategists curate leaders, executors execute trades
+
+### 12.2 Why doesn't `returnFromPosition` track per-user or per-leader P&L?
+
+The `returnFromPosition` function only updates `totalIdleAssets`:
+
+```solidity
+function returnFromPosition(uint256 amount) external onlyRole(EXECUTOR_ROLE) nonReentrant {
+    totalIdleAssets += amount;
+    emit PositionReturned(amount);
+}
+```
+
+**The contract intentionally does NOT track per-user or per-leader P&L on-chain** because:
+
+1. This is a **pooled vault** (ERC-4626) - all users share profits/losses proportionally via share price
+2. Individual tracking would be extremely gas-expensive
+3. Per-leader attribution should be tracked **in the backend database**
+
+**Backend responsibility:** Your backend should:
+
+- Store which leader triggered each position (in your DB, not on-chain)
+- Calculate per-leader performance metrics off-chain
+- Track copy relationships in Prisma/PostgreSQL
+
+### 12.3 Why use a vault contract instead of depositing directly to the executor wallet?
+
+The contract DOES interact with Polymarket - the `PositionManager` has:
+
+```solidity
+IConditionalTokens public immutable ctf;  // Polymarket CTF
+address public immutable exchange;         // Polymarket CLOB
+```
+
+**Why use a contract instead of direct wallet deposit?**
+
+1. **Security**: Users' funds are in a non-custodial vault, not a backend-controlled EOA
+2. **Transparency**: All trades are auditable on-chain
+3. **Share accounting**: ERC-4626 handles fair share distribution automatically
+4. **Limits enforcement**: On-chain limits (max trade size 5%, max exposure 80%) prevent rogue backend
+5. **Pausability**: Guardian can pause if backend is compromised
+
+The gas cost tradeoff is intentional - the security benefits outweigh gas savings.
+
+### 12.4 What's the difference between `withdraw` and `redeem`?
+
+Both functions allow users to exit the vault, but with different inputs:
+
+| Function                           | Input       | Output        | Use Case                        |
+| ---------------------------------- | ----------- | ------------- | ------------------------------- |
+| `withdraw(assets, receiver, owner)` | USDC amount | Shares burned | "I want exactly $1000 back"     |
+| `redeem(shares, receiver, owner)`   | Share amount | USDC received | "I want to redeem all my shares" |
+
+**Key difference:**
+
+- `withdraw`: User specifies exact USDC amount, contract calculates shares to burn
+- `redeem`: User specifies exact shares to burn, contract calculates USDC to return
+
+Both have the same liquidity constraint: reverts with `InsufficientLiquidity` if `assets > totalIdleAssets`.
+
+### 12.5 Is there an on-chain incentive mechanism for leaders?
+
+**Currently no on-chain leader incentives.** The contract has fee infrastructure (`performanceFee`, `managementFee`, `feeRecipient`) but these go to the protocol/admin, not leaders.
+
+**Leader incentives should be implemented off-chain** in the backend:
+
+- Track performance attribution per leader
+- Calculate leader commissions from performance fees
+- Pay leaders separately (can be off-chain or via a separate mechanism)
+
+This is a product decision, not a contract limitation. If you want on-chain leader fees, the contract would need modification.
+
+### 12.6 Do `openPosition`, `closePosition`, `redeemPosition` validate against the leader list?
+
+**No.** These functions only check for `EXECUTOR_ROLE`:
+
+```solidity
+function openPosition(...) external onlyRole(EXECUTOR_ROLE) ...
+function closePosition(...) external onlyRole(EXECUTOR_ROLE) ...
+function redeemPosition(...) external onlyRole(EXECUTOR_ROLE) ...
+```
+
+These functions:
+
+- Only verify the caller has `EXECUTOR_ROLE` (the backend service)
+- Have **no concept of leader/follower** on-chain
+- Don't validate against the leader list
+
+**The copy-trading logic lives entirely in the backend:**
+
+1. Backend monitors leaders on Polymarket (off-chain)
+2. Backend decides when to mirror trades (off-chain)
+3. Backend calls `allocateForTrade()` then `openPosition()` (on-chain)
+
+**Why?** Because Polymarket's order book (CLOB) is off-chain. The contract can't watch leaders directly - that's the backend's job.
+
+### 12.7 Architecture Summary: What lives on-chain vs off-chain?
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    BACKEND (Off-Chain)                           │
+│  - Monitor Polymarket for leader trades                          │
+│  - Track leader/follower relationships (DB)                      │
+│  - Calculate per-leader P&L (DB)                                 │
+│  - Decide trade amounts and timing                               │
+│  - Execute trades via EXECUTOR_ROLE                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  SMART CONTRACTS (On-Chain)                      │
+│  - Custody of user funds (ERC-4626 vault)                        │
+│  - Share accounting (fair distribution)                          │
+│  - Trade execution limits (max size, exposure)                   │
+│  - Leader whitelist (STRATEGIST manages)                         │
+│  - Emergency pause (GUARDIAN role)                               │
+│  - Actual Polymarket trades via CTF/CLOB                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+The contract is the **execution and custody layer**, while the backend is the **intelligence and attribution layer**.
 
 ---
 
